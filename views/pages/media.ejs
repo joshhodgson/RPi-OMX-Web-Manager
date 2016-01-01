@@ -1,0 +1,138 @@
+<html>
+<head>
+  <!-- Latest compiled and minified CSS -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+
+  <!-- Optional theme -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap-theme.min.css" integrity="sha384-fLW2N01lMqjakBkx3l/M9EahuwpSfeNvV63J5ezn3uZzapT0u7EYsXMjQV+0En5r" crossorigin="anonymous">
+
+  <!-- Latest compiled and minified JavaScript -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+<title><%= media.name %></title>
+</head>
+<body>
+  <div class="jumbotron">
+    <div class="container">
+<body>
+<h1>Control page for <%= media.name%>!</h1>
+<p>File location: <%=media.dir%></p>
+<p><a href="/">Go back</a></p>
+
+  <div class="btn-group btn-group">
+
+<button id="init" onclick="initCommand()" class="btn btn-primary">PRELOAD</button>
+<button id="play" onclick="playCommand()" class="btn btn-success">PLAY</button>
+<button id="pause" onclick="pauseCommand()" class="btn btn-warning">PAUSE</button>
+<button id="stop" onclick="stopCommand()" class="btn btn-danger">STOP</button>
+</div>
+</div>
+</div>
+
+<div class="jumbotron">
+  <div class="container">
+    <h2 id='currentVideo'></h2>
+    <div class="progress">
+      <div id="progress" class="progress-bar" role="progressbar" style="width:0%">
+      </div>
+    </div>
+    <h3 id="timeDisplay"></h3>
+
+
+  </div>
+</div>
+
+</body>
+<script type="text/javascript">
+function initCommand() {
+  isPaused=true
+  console.log('init');
+  socket.emit('init', {id:<%=media.id%>})
+  document.getElementById("init").disabled = true;
+
+
+};
+function playCommand() {
+  isPaused=false;
+  console.log('play');
+  socket.emit('play', {id:<%=media.id%>})
+  document.getElementById("init").disabled = true;
+  console.log(timerRunning)
+  if(timerRunning==false) {
+    timerRunning=true
+    timer = setInterval(progressTimer, 300)
+    document.getElementById("progress").style.width= currentTime/totalTime*100+'%'
+    console.log('Started timing')}
+
+
+};
+function pauseCommand() {
+  console.log('pause');
+  socket.emit('pause', {id:<%=media.id%>})
+  isPaused=true;
+
+};
+function stopCommand() {
+  console.log('stop');
+  socket.emit('stop', {id:<%=media.id%>})
+  //document.getElementById("init").disabled = false;
+
+};
+
+
+</script>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+  var socket = io.connect('http://'+ window.location.host);
+  //socket.on('news', function (data) {
+    //console.log(data);
+    //socket.emit('my other event', { my: 'data' });
+
+//  });
+var currentTime = 0
+var totalTime
+var timerRunning=false
+var timer
+var isPaused=false
+function progressTimer(){
+  if(!isPaused){
+  currentTime = currentTime + 0.3
+  document.getElementById("progress").style.width= currentTime/totalTime*100+'%'
+  console.log(currentTime + ' is current estimated time')
+  if(totalTime) {
+    var remaining=totalTime-currentTime
+    document.getElementById("timeDisplay").innerHTML = 'Current video has ' +remaining.toFixed(1)+' seconds remaining';
+  }
+
+}
+}
+
+socket.on('stopped', function (msg) {
+  console.log('socket incoming')
+  document.getElementById("init").disabled = false;
+  clearInterval(timer);
+  timerRunning=false
+});
+
+socket.on('totaltime', function(msg){
+  totalTime = msg
+  console.log('total time is ' + msg)
+});
+socket.on('progress', function (msg) {
+  console.log('times incoming')
+  console.log('elapsed: '+msg.current)
+  currentTime = msg.current
+  totalTime = msg.total;
+  if(timerRunning==false) {
+    timerRunning=true
+    timer = setInterval(progressTimer, 300)
+    document.getElementById("progress").style.width= currentTime/totalTime*100+'%'
+    console.log('Started timing')}
+  document.getElementById("currentVideo").innerHTML = 'Current video is '+msg.video;
+
+
+  //document.getElementById("progress").style.width= msg.elapsed/msg.total*100+'%'
+});
+
+</script>
+</html>
