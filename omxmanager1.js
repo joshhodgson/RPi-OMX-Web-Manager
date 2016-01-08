@@ -212,8 +212,8 @@ var _startup = function (videos, args, loop) {
     _omxProcess.once('exit', respawn);
   } else {
     var exitFunction = function () {
-      //_omxProcess = null;
-      _omxProcess.kill(); //"THIS IS A TEST"
+      _omxProcess = null;
+      //_omxProcess.kill(); //"THIS IS A TEST"
       _this.emit('stop');
       _this.emit('end');
     };
@@ -442,8 +442,8 @@ _this.stop = function () {
     clearTimeout(_hanging.timeout);
   }
   _looper = null;
-//  _omxProcess = null;
-  _omxProcess.kill();
+  _omxProcess = null;
+  //_omxProcess.kill();
   console.log('_omxprocess, killed line 446')
 };
 
