@@ -1,9 +1,6 @@
 //Load Dependencies
 var fs= require('fs');
-//var omx = require('omx-manager');
-
-var omxobj = require('./omx.js')
-
+var omx = require('./omx');
 var express = require('express');
 var socket  = require('socket.io');
 var path = require('path');
@@ -13,17 +10,13 @@ var app=express();
 var server = app.listen(80);
 var io = socket.listen(server);
 
-//start omx stuff
-
-var omx = omxobj.create({layer: 2})
-
 //Define Variables
 
 var dir = __dirname + "/media"; //Media Folder
 //omx.setVideosDirectory(dir);
-
+var currentVideo
 var preload=false //Allows auto-pausing of videos on start, cuts load times
-
+var lengths = {'dummy':0}
 // Define all OMXPlayer button commands
 function stopClicked(data){
   //console.log("stop");
@@ -31,16 +24,18 @@ function stopClicked(data){
   //console.log(data);
 };
 function playClicked(data){
- /*if (omx.getStatus().current!= (dir + '/' + mp4s[data.id]) ) {
+ if (omx.getStatus().current!= (dir + '/' + mp4s[data.id]) ) {
    omx.stop();
    console.log('stopped')
-   setTimeout(function(){omx.play(mp4s[data.id])}, 300)
+   setTimeout(function(){dir+omx.play(mp4s[data.id],{'-s': true, '-I': true});
+   currentVideo = mp4s[data.id]
+   omx.emit('progress',0)}, 300)
  } else {
-   omx.play(mp4s[data.id])
- }*/
- omx.play(dir + '/'+mp4s[data.id])
+   omx.play(dir+mp4s[data.id],{'-s': true, '-I': true})
+   currentVideo = mp4s[data.id]
+   omx.emit('progress',0)
 
-
+ }
  //console.log(omx.getStatus().current)
  //console.log(dir + / + mp4s[data.id])
 //  omx.play(mp4s[data.id]);
@@ -50,17 +45,25 @@ function playClicked(data){
 function pauseClicked(data){
   //console.log("Pause");
   omx.pause();
+  console.log('pause clicked')
   //console.log(data);
 };
 function initClicked(data){
   //console.log("Init");
   omx.stop();
   console.log('init stopped vid')
+  console.log("Preload set true by init")
   preload=true;
   setTimeout(function(){
-    omx.play(mp4s[data.id]);
-    console.log('video played')
-  }, 300); //compensate for omxplayer delays
+
+    console.log('about to video play by init timeout');
+
+    omx.play(dir+mp4s[data.id],{'-s': true, '-I': true});
+    currentVideo = mp4s[data.id];
+
+
+  omx.emit('progress',0)}
+, 1000);
 
   //console.log(data);
 };
@@ -68,7 +71,10 @@ function initClicked(data){
 
 //This runs the preload, pausing videos as soon as they start
 omx.on('load', function(videos){
-  if (preload==true){omx.pause();preload=false};
+  console.log('video loaded')
+  if (preload==true){omx.pause();
+    preload=false;
+  console.log('video paused by preload')};
 });
 
 
@@ -91,8 +97,9 @@ var mp4s = getFolderList(dir,"mp4")//Initialize list of videos
 //START WEB SERVER
 app.set('view engine', 'ejs');
 app.get('/', function(req, res){
-  var data = {files: getFolderList(dir,"mp4")};
+  var data = {'files': getFolderList(dir,"mp4"), 'lengths':lengths};
   res.render('pages/index.ejs',data);
+  mp4s = getFolderList(dir,"mp4")
 });
 
 app.get('/media/:id', function(req, res){
@@ -120,20 +127,26 @@ io.on( "connection", function( socket ){
     io.emit('stopped', true);
     console.log('omx stopped');
   });
+  omx.on('progress',function(data){
+    console.log('progress socket sent')
+    io.emit('progress', {'current':data,'total':totalTime,'video': currentVideo})
+  });
+
+  omx.on('totaltime',function(data){
+      console.log('totaltime socket sent')
+      io.emit('totaltime',data)});
+
 });
 
 console.log("listening on port 80") //Confirm end of processing file
+var totalTime
+omx.on('progress',function(data){console.log(data)})
+omx.on('totaltime',function(data){
+  totalTime = data;
+  console.log('total time')
+  lengths[currentVideo] = data
+  console.log(currentVideo)
+  console.log(lengths)
+})
 
-var time
 //var timer = setInterval(function(){console.log(omx.getStatus())}, 2000)
-omx.on("progress", function(progress) {
-  if (progress.last==0) {
-    time=0
-    setInterval(function(){
-    time = time + 0.1
-  }, 100)
-}
-//	console.log(progress);
-  //console.log(progress.last.toString() + ' ' + time.toString())
-  console.log(progress.last - time)
-});
