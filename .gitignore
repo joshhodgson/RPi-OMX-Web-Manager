@@ -1,4 +1,4 @@
-node_modules
-media/**
-!media/place_media_here
-env
+app/node_modules
+app/media/**
+!app/media/place_media_here
+app/.env
