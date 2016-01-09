@@ -1,6 +1,6 @@
 //Load Dependencies
 var fs= require('fs');
-var omx = require('./omxmanager1');
+var omx = require('./omx');
 var express = require('express');
 var socket  = require('socket.io');
 var path = require('path');
@@ -13,7 +13,7 @@ var io = socket.listen(server);
 //Define Variables
 
 var dir = __dirname + "/media"; //Media Folder
-omx.setVideosDirectory(dir);
+//omx.setVideosDirectory(dir);
 var currentVideo
 var preload=false //Allows auto-pausing of videos on start, cuts load times
 var lengths = {'dummy':0}
@@ -27,12 +27,12 @@ function playClicked(data){
  if (omx.getStatus().current!= (dir + '/' + mp4s[data.id]) ) {
    omx.stop();
    console.log('stopped')
-   setTimeout(function(){omx.play(mp4s[data.id],{'-s': true, '-I': true});
+   setTimeout(function(){dir+omx.play(mp4s[data.id],{'-s': true, '-I': true});
    currentVideo = mp4s[data.id]
    omx.emit('progress',0)}, 300)
  } else {
-   omx.play(mp4s[data.id],{'-s': true, '-I': true})
-   currentVideo = mp4s[data.id]
+   omx.play(dir+mp4s[data.id],{'-s': true, '-I': true})
+   currentVideo = dir+mp4s[data.id]
    omx.emit('progress',0)
 
  }
@@ -58,8 +58,8 @@ function initClicked(data){
 
     console.log('about to video play by init timeout');
 
-    omx.play(mp4s[data.id],{'-s': true, '-I': true});
-    currentVideo = mp4s[data.id];
+    omx.play(dir+mp4s[data.id],{'-s': true, '-I': true});
+    currentVideo = dir+mp4s[data.id];
 
 
   omx.emit('progress',0)}
