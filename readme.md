@@ -8,6 +8,7 @@ A simple HTML and Javascript based OMXPlayer manager, designed with Student TV i
 - Allows "Preloading" of videos (pause videos at 0:00 so they're ready to play immediately)
 
 ##To-Do
-+ Allow file uploads in browser
++ Allow file uploads in browser (and basic file management - renaming, deleting etc)
++ Store data about files (name, length, screencap perhaps?)
 + Enable custom file ordering, and possibly playlists
 + Improve for touch interface
