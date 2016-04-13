@@ -31,7 +31,8 @@ function omxPlayer(options) {
 			if (result && totalTime>0 && result.length>0) {
 				var last = result[result.length-1];
 				var progress = parseInt(last)*100/totalTime;
-				that.emit("progress", {'percent': progress, 'last':parseInt(last)/1000000, 'total': totalTime/1000000});//progress
+			//	that.emit("progress", {'percent': progress, 'last':parseInt(last)/1000000, 'total': totalTime/1000000});//progress
+			that.emit('progress', parseInt(last)/1000000)
 			}
 
 			// that.emit('stdout', data);
@@ -50,6 +51,8 @@ function omxPlayer(options) {
 					totalTime = ((parseInt(duration.substring(0,2)) * 3600 +
 						parseInt(duration.slice(3,5)) * 60 +
 						parseInt(duration.slice(6,8))) * 1000 + parseInt(duration.slice(9,11))) * 1000;
+
+						that.emit('totalTime', totalTime)
 
 					// console.log("Total time is (%d) (%s)", totalTime, duration);
 				}
